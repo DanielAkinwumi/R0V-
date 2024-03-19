@@ -19,17 +19,17 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Initialize Terraform
-        run: cd Dan.Accessment-master/terraform-eks && terraform init
+        run: cd terraform-eks/EKS && terraform init
 
       - name: Format Terraform Code
-        run: cd Dan.Accessment-master/terraform-eks && terraform fmt
+        run: cd terraform-eks/EKS && terraform fmt
 
       - name: Validate Terraform
-        run: cd Dan.Accessment-master/terraform-eks && terraform validate
+        run: cd terraform-eks/EKS && terraform validate
 
       - name: Plan Infrastructure Changes
         run: |
-          cd Dan.Accessment-master/terraform-eks
+          cd terraform-eks/EKS
           terraform plan
           read -p "Are you sure to proceed?" -n 1 -r
           echo
