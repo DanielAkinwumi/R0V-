@@ -1,47 +1,49 @@
-name: Terraform and Kubernetes Deployment
+name: Terraform AWS Deployment
 
 on:
-  push:
+  pull_request:
     branches:
       - master
 
-env:
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  AWS_DEFAULT_REGION: "eu-west-1"
-
 jobs:
-  terraform_and_deploy:
+  Build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Initialize Terraform
-        run: cd terraform-eks/EKS && terraform init
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: latest
+        cli_config_credentials_token: ${{ secrets.TERRAFORM_API_TOKEN }}
 
-      - name: Format Terraform Code
-        run: cd terraform-eks/EKS && terraform fmt
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: eu-west-1
 
-      - name: Validate Terraform
-        run: cd terraform-eks/EKS && terraform validate
+    - name: Terraform Init
+      run: terraform init
 
-      - name: Plan Infrastructure Changes
-        run: |
-          cd terraform-eks/EKS
-          terraform plan
-          read -p "Are you sure to proceed?" -n 1 -r
-          echo
-          if [[ $REPLY =~ ^[Yy]$ ]]; then
-            terraform apply --auto-approve
-          else
-            echo "Aborted."
-            exit 1
-          fi
+    - name: Terraform Validate
+      run: terraform validate
 
-      - name: Deploy Nginx Application
-        run: |
+    - name: Terraform Plan
+      run: terraform plan
+
+    
+    - name: Terraform Apply
+      run: terraform apply 
+
+    - name: Deploy Nginx Application
+      run: |
           aws eks update-kubeconfig --name rova_eks_cluster
           kubectl apply -f terraform-eks/EKS/ConfigurationFiles/deployment.yaml
           kubectl apply -f terraform-eks/EKS/ConfigurationFiles/service.yaml
