@@ -25,7 +25,7 @@ jobs:
         run: cd Dan.Accessment-master/terraform-eks && terraform fmt
 
       - name: Validate Terraform
-        run: Dan.Accessment-master/terraform-eks && terraform validate
+        run: cd Dan.Accessment-master/terraform-eks && terraform validate
 
       - name: Plan Infrastructure Changes
         run: |
